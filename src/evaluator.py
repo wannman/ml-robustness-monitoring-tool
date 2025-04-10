@@ -1,5 +1,3 @@
-
-from typing import List
 import numpy as np
 from sklearn.base import BaseEstimator, accuracy_score
 from perturbation import apply_perturbation
@@ -17,15 +15,15 @@ def evaluate_robustness(
         vectorizer: BaseEstimator,
         X: np.ndarray,
         y: np.ndarray,
-        perturbation_levels: List[float],
-        metrics: List[str],
+        metrics: list[str],
+        perturbation_levels: list[float]
     ):
 
     results = {"perturbation level": [], "accuracy": []}
 
     for level in perturbation_levels:
-        X_perturbated = apply_perturbation(X, level)
-        X_perturbed_vect, _ = vectorize_data(X_perturbated, X, vectorizer, True)
+        X_perturbed_data = apply_perturbation(X, level)
+        X_perturbed_vect, _ = vectorize_data(X_perturbed_data, X, vectorizer, True)
 
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
@@ -52,7 +50,7 @@ def evaluate_robustness(
     if "our_metric" in metrics:
         metrics_summary["our_metric"] = our_metric(base_accuracy, results["accuracy"])
 
-    if "accuracy" in metrics:
+    if "base_accuracy" in metrics:
         metrics_summary["accuracy"] = base_accuracy
 
     return results, metrics_summary 
