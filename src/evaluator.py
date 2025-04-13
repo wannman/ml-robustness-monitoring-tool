@@ -1,5 +1,6 @@
 import numpy as np
-from sklearn.base import BaseEstimator, accuracy_score
+from sklearn.base import BaseEstimator
+from sklearn.metrics import accuracy_score
 from perturbation import apply_perturbation
 from vectorizer import vectorize_data 
 from metrics import (
@@ -15,15 +16,19 @@ def evaluate_robustness(
         vectorizer: BaseEstimator,
         X: np.ndarray,
         y: np.ndarray,
-        metrics: list[str],
-        perturbation_levels: list[float]
+        perturbation_levels: list[float],
+        metrics: list[str]
     ):
 
     results = {"perturbation level": [], "accuracy": []}
 
     for level in perturbation_levels:
         X_perturbed_data = apply_perturbation(X, level)
-        X_perturbed_vect, _ = vectorize_data(X_perturbed_data, X, vectorizer, True)
+       # print(f"\nPerturbation level: {level}")
+        #for original, changed in zip(X, X_perturbed_data):
+         #   print(f"ORIGINAL: {original}")
+         #   print(f"PERTURBED: {changed}")
+        X_perturbed_vect = vectorize_data(vectorizer, X_perturbed_data)
 
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
