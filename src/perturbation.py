@@ -1,23 +1,29 @@
 import random
-from numpy import ndarray
-from textattack.augmentation import WordNetAugmenter, EasyDataAugmenter, CharSwapAugmenter
+import numpy as np
+from textattack.augmentation import EasyDataAugmenter
 
-def apply_perturbation(X: ndarray, level: float = 0.3) -> list[str]:
-    random.seed(42)  # Set a seed for reproducibility
+def apply_perturbation(X: list[np.ndarray], level: float = 0.3) -> list[np.ndarray]:
 
-    wordnet_augmenter = WordNetAugmenter(pct_words_to_swap=level, transformations_per_example=1)
-    charswap_augmenter = CharSwapAugmenter(pct_words_to_swap=level, transformations_per_example=1)
+    # Set a seed for reproducibility
+    random.seed(42)  
+    augmenter = EasyDataAugmenter(pct_words_to_swap=0.3, transformations_per_example=1)
 
-    perturbed_data = []
+    titles, descriptions = X
+    num_lines = len(titles)
+    
+    # Calculate the number of lines to augment
+    num_to_augment = int(num_lines * level)  
 
-    for text in X:
-        augmented = wordnet_augmenter.augment(text)
-        augmented_text = augmented[0] if augmented else text
+    data_to_augment = random.sample(range(num_lines), num_to_augment)
 
-        augmented = charswap_augmenter.augment(augmented_text)
-        perturbed_data.append(augmented[0] if augmented else augmented_text)
+    perturbed_titles = titles.copy()
+    perturbed_descriptions = descriptions.copy()
 
-    return perturbed_data
+    for idx in data_to_augment: 
+        perturbed_titles[idx] = augmenter.augment(titles[idx])[0]
+        perturbed_descriptions[idx] = augmenter.augment(descriptions[idx])[0]
+
+    return [perturbed_titles, perturbed_descriptions]
 
 
 

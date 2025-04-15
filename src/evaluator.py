@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score
 from perturbation import apply_perturbation
-from vectorizer import vectorize_data 
+from vectorizer import vectorize_data
 from metrics import (
     mean_corruption_error,
     relative_corruption_error,
@@ -13,22 +13,36 @@ from metrics import (
 
 def evaluate_robustness(
         model: BaseEstimator, 
-        vectorizer: BaseEstimator,
-        X: np.ndarray,
+        vectorizers: list[BaseEstimator],
+        X: list[np.ndarray],
         y: np.ndarray,
         perturbation_levels: list[float],
         metrics: list[str]
     ):
 
     results = {"perturbation level": [], "accuracy": []}
+    X_titles, X_desc = X
 
     for level in perturbation_levels:
         X_perturbed_data = apply_perturbation(X, level)
-       # print(f"\nPerturbation level: {level}")
-        #for original, changed in zip(X, X_perturbed_data):
-         #   print(f"ORIGINAL: {original}")
-         #   print(f"PERTURBED: {changed}")
-        X_perturbed_vect = vectorize_data(vectorizer, X_perturbed_data)
+        X_perturbed_titles, X_perturbed_desc = X_perturbed_data
+
+        print(f"\nPerturbation level: {level}")
+        print("Titles:")
+        for original, changed in zip(X_titles, X_perturbed_titles):
+           print(f"ORIGINAL: {original}")
+           print(f"PERTURBED: {changed}")
+
+        print("Descriptions:")
+        for original, changed in zip(X_desc, X_perturbed_desc):
+           print(f"ORIGINAL: {original}")
+           print(f"PERTURBED: {changed}")
+
+        X_perturbed_vect = vectorize_data(
+            vectorizers[0], 
+            vectorizers[1],
+            X_perturbed_titles,
+            X_perturbed_desc)
 
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
