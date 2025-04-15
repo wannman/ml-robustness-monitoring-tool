@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score
 from perturbation import apply_perturbation
@@ -24,7 +25,8 @@ def evaluate_robustness(
     X_titles, X_desc = X
 
     for level in perturbation_levels:
-        X_perturbed_data = apply_perturbation(X, level)
+        file_path = Path(f"perturbed_data/perturbed_data_{level:.2f}.pkl")
+        X_perturbed_data = apply_perturbation(X, level, load_path=file_path)
         X_perturbed_titles, X_perturbed_desc = X_perturbed_data
 
         print(f"\nPerturbation level: {level}")
