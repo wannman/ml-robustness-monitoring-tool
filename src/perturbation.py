@@ -18,8 +18,9 @@ def apply_perturbation(
             return pickle.load(f)
 
     # Otherwise, perform perturbation
+    pct_words_to_swap = 0.6
     random.seed(42)
-    augmenter = EasyDataAugmenter(pct_words_to_swap=level, transformations_per_example=1)
+    augmenter = EasyDataAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
 
     titles, descriptions = X
     num_lines = len(titles)
