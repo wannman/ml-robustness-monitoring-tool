@@ -1,23 +1,46 @@
+import os
+import pickle
 import random
-from numpy import ndarray
-from textattack.augmentation import WordNetAugmenter, EasyDataAugmenter, CharSwapAugmenter
+from typing import Optional
+import numpy as np
+from textattack.augmentation import EasyDataAugmenter
 
-def apply_perturbation(X: ndarray, level: float = 0.3) -> list[str]:
-    random.seed(42)  # Set a seed for reproducibility
+def apply_perturbation(
+    X: list[np.ndarray],
+    level: float = 0.3,
+    save_path: Optional[str] = None,
+    load_path: Optional[str] = None
+) -> list[np.ndarray]:
 
-    wordnet_augmenter = WordNetAugmenter(pct_words_to_swap=level, transformations_per_example=1)
-    charswap_augmenter = CharSwapAugmenter(pct_words_to_swap=level, transformations_per_example=1)
+    # Load previously saved perturbed data (if exists)
+    if load_path and os.path.exists(load_path):
+        with open(load_path, "rb") as f:
+            return pickle.load(f)
 
-    perturbed_data = []
+    # Otherwise, perform perturbation
+    random.seed(42)
+    augmenter = EasyDataAugmenter(pct_words_to_swap=level, transformations_per_example=1)
 
-    for text in X:
-        augmented = wordnet_augmenter.augment(text)
-        augmented_text = augmented[0] if augmented else text
+    titles, descriptions = X
+    num_lines = len(titles)
+    num_to_augment = int(num_lines * level)
+    data_to_augment = random.sample(range(num_lines), num_to_augment)
 
-        augmented = charswap_augmenter.augment(augmented_text)
-        perturbed_data.append(augmented[0] if augmented else augmented_text)
+    perturbed_titles = titles.copy()
+    perturbed_descriptions = descriptions.copy()
 
-    return perturbed_data
+    for idx in data_to_augment:
+        perturbed_titles[idx] = augmenter.augment(titles[idx])[0]
+        perturbed_descriptions[idx] = augmenter.augment(descriptions[idx])[0]
 
+    result = [perturbed_titles, perturbed_descriptions]
+
+    # Save the result to disk if path provided
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, "wb") as f:
+            pickle.dump(result, f)
+
+    return result
 
 
