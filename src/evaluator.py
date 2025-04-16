@@ -14,7 +14,8 @@ from metrics import (
 
 def evaluate_robustness(
         model: BaseEstimator, 
-        vectorizers: list[BaseEstimator],
+        #vectorizers: list[BaseEstimator],
+        vectorizer: BaseEstimator,
         X: list[np.ndarray],
         y: np.ndarray,
         perturbation_levels: list[float],
@@ -22,29 +23,35 @@ def evaluate_robustness(
     ):
 
     results = {"perturbation level": [], "accuracy": []}
-    X_titles, X_desc = X
+    #X_titles, X_desc = X
 
     for level in perturbation_levels:
         file_path = Path(f"perturbed_data/perturbed_data_{level:.2f}.pkl")
         X_perturbed_data = apply_perturbation(X, level, load_path=file_path)
-        X_perturbed_titles, X_perturbed_desc = X_perturbed_data
+        #X_perturbed_titles, X_perturbed_desc = X_perturbed_data
+
+        # print(f"\nPerturbation level: {level}")
+        # print("Titles:")
+        # for original, changed in zip(X_titles, X_perturbed_titles):
+        #    print(f"ORIGINAL: {original}")
+        #    print(f"PERTURBED: {changed}")
+
+        # print("Descriptions:")
+        # for original, changed in zip(X_desc, X_perturbed_desc):
+        #    print(f"ORIGINAL: {original}")
+        #    print(f"PERTURBED: {changed}")
 
         print(f"\nPerturbation level: {level}")
-        print("Titles:")
-        for original, changed in zip(X_titles, X_perturbed_titles):
-           print(f"ORIGINAL: {original}")
-           print(f"PERTURBED: {changed}")
+        for original, changed in zip(X, X_perturbed_data):
+            print(f"ORIGINAL: {original}")
+            print(f"PERTURBED: {changed}")
 
-        print("Descriptions:")
-        for original, changed in zip(X_desc, X_perturbed_desc):
-           print(f"ORIGINAL: {original}")
-           print(f"PERTURBED: {changed}")
 
         X_perturbed_vect = vectorize_data(
-            vectorizers[0], 
-            vectorizers[1],
-            X_perturbed_titles,
-            X_perturbed_desc)
+            vectorizer, 
+            #vectorizers[1],
+            #X_perturbed_titles,
+            X_perturbed_data)
 
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
