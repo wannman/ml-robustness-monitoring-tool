@@ -3,7 +3,7 @@ import pickle
 import random
 from typing import Optional
 import numpy as np
-from textattack.augmentation import EasyDataAugmenter
+from textattack.augmentation import WordNetAugmenter, CharSwapAugmenter, EasyDataAugmenter
 
 def apply_perturbation(
     X: np.ndarray,
@@ -20,23 +20,18 @@ def apply_perturbation(
     # Otherwise, perform perturbation
     pct_words_to_swap = 1.0
     random.seed(42)
-    augmenter = EasyDataAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    #augmenter = EasyDataAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    #augmenter = WordNetAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    augmenter = CharSwapAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
 
-    #titles, descriptions = X
     num_lines = len(X)
     num_to_augment = int(num_lines * level)
     data_to_augment = random.sample(range(num_lines), num_to_augment)
 
-    #perturbed_titles = titles.copy()
-    #perturbed_descriptions = descriptions.copy()
     perturbed_X = X.copy()
 
     for idx in data_to_augment:
-        #perturbed_titles[idx] = augmenter.augment(titles[idx])[0]
-        #perturbed_descriptions[idx] = augmenter.augment(descriptions[idx])[0]
         perturbed_X[idx] = augmenter.augment(X[idx])[0]
-
-    #result = [perturbed_titles, perturbed_descriptions]
 
     # Save the result to disk if path provided
     if save_path:
@@ -45,5 +40,3 @@ def apply_perturbation(
             pickle.dump(perturbed_X, f)
 
     return perturbed_X
-
-

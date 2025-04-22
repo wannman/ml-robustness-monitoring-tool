@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 from pathlib import Path
 from sklearn.base import BaseEstimator
@@ -13,45 +14,27 @@ from metrics import (
 ) 
 
 def evaluate_robustness(
-        model: BaseEstimator, 
-        #vectorizers: list[BaseEstimator],
+        model: BaseEstimator,
         vectorizer: BaseEstimator,
         X: list[np.ndarray],
         y: np.ndarray,
         perturbation_levels: list[float],
-        metrics: list[str]
+        metrics: list[str],
+        file_path: Optional[Path] = None,
     ):
 
     results = {"perturbation level": [], "accuracy": []}
-    #X_titles, X_desc = X
 
     for level in perturbation_levels:
-        file_path = Path(f"perturbed_data/perturbed_data_{level:.2f}.pkl")
-        X_perturbed_data = apply_perturbation(X, level, load_path=file_path)
-        #X_perturbed_titles, X_perturbed_desc = X_perturbed_data
-
-        # print(f"\nPerturbation level: {level}")
-        # print("Titles:")
-        # for original, changed in zip(X_titles, X_perturbed_titles):
-        #    print(f"ORIGINAL: {original}")
-        #    print(f"PERTURBED: {changed}")
-
-        # print("Descriptions:")
-        # for original, changed in zip(X_desc, X_perturbed_desc):
-        #    print(f"ORIGINAL: {original}")
-        #    print(f"PERTURBED: {changed}")
+        load_path = file_path / f"{level:.2f}.pkl"
+        X_perturbed_data = apply_perturbation(X, level, load_path=load_path)
 
         print(f"\nPerturbation level: {level}")
         for original, changed in zip(X, X_perturbed_data):
             print(f"ORIGINAL: {original}")
             print(f"PERTURBED: {changed}")
 
-
-        X_perturbed_vect = vectorize_data(
-            vectorizer, 
-            #vectorizers[1],
-            #X_perturbed_titles,
-            X_perturbed_data)
+        X_perturbed_vect = vectorize_data(vectorizer, X_perturbed_data)
 
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
