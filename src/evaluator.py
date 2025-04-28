@@ -26,13 +26,13 @@ def evaluate_robustness(
     results = {"perturbation level": [], "accuracy": []}
 
     for level in perturbation_levels:
-        load_path = file_path / f"{level:.2f}.pkl"
+        load_path = file_path / f"perturbed_data_{level:.2f}.pkl"
         X_perturbed_data = apply_perturbation(X, level, load_path=load_path)
 
-        print(f"\nPerturbation level: {level}")
-        for original, changed in zip(X, X_perturbed_data):
-            print(f"ORIGINAL: {original}")
-            print(f"PERTURBED: {changed}")
+        # print(f"\nPerturbation level: {level}")
+        # for original, changed in zip(X, X_perturbed_data):
+        #     print(f"ORIGINAL: {original}")
+        #     print(f"PERTURBED: {changed}")
 
         X_perturbed_vect = vectorize_data(vectorizer, X_perturbed_data)
 
