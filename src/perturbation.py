@@ -3,8 +3,7 @@ import pickle
 import random
 from typing import Optional
 import numpy as np
-from textattack.augmentation import WordNetAugmenter, CharSwapAugmenter, EasyDataAugmenter, CLAREAugmenter, Augmenter
-from textattack.transformations import WordSwapNeighboringCharacterSwap
+from textattack.augmentation import WordNetAugmenter, CharSwapAugmenter, DeletionAugmenter
 
 def apply_perturbation(
     X: np.ndarray,
@@ -21,10 +20,10 @@ def apply_perturbation(
     # Otherwise, perform perturbation
     pct_words_to_swap = 1.0
     random.seed(42)
-    #augmenter = EasyDataAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    
     #augmenter = WordNetAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
-    augmenter = CharSwapAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
-    #augmenter = Augmenter(transformation=WordSwapNeighboringCharacterSwap(), pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    #augmenter = CharSwapAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    augmenter = DeletionAugmenter(pct_words_to_swap=0.7, transformations_per_example=1)
 
     num_lines = len(X)
     num_to_augment = int(num_lines * level)
