@@ -35,6 +35,7 @@ def evaluate_robustness(
     
     # Accuracy data used for calculating metrics
     accuracy_data = []
+    
 
     for level in perturbation_levels:
         # Handle the case where file_path is None
@@ -71,39 +72,46 @@ def evaluate_robustness(
     metrics_summary = {}
 
 
+
+    
     # Add metric data to results
+    # For MDS, we send all accuracy data and get a list of results at all possible perturbation levels
+    # which we append to results
+    mds_scores = []
+    mds_scores = our_metric(base_accuracy, accuracy_data)
     for i in range(len(accuracy_data)):
         results["RS"].append(robustness_score(base_accuracy, accuracy_data[i]) if "robustness_score" in metrics else None)
         results["mCE"].append(mean_corruption_error(base_accuracy, accuracy_data[i]) if "mce" in metrics else None)        
         results["PDR"].append(performance_drop_rate(base_accuracy, accuracy_data[i]) if "pdr" in metrics else None)
-        results["MDS"].append(our_metric(base_accuracy, accuracy_data[i]) if "our_metric" in metrics else None)                  
+        # results["MDS"].append(our_metric(base_accuracy, accuracy_data[i]) if "our_metric" in metrics else None) 
+        # Add MDS from calculated list instead
+        results["MDS"].append(mds_scores[i] if "our_metric" in metrics else None)                
     
 
+
     # Summaries (incorporate above?)
-    if "mce" in metrics:
-        metrics_summary["mce"] = mean_corruption_error(base_accuracy, results["accuracy"])
+    # if "mce" in metrics:
+    #     metrics_summary["mce"] = mean_corruption_error(base_accuracy, results["accuracy"])
         
         
-    if "rce" in metrics:
-        metrics_summary["rce"] = relative_corruption_error(base_accuracy, results["accuracy"])
+    # if "rce" in metrics:
+    #     metrics_summary["rce"] = relative_corruption_error(base_accuracy, results["accuracy"])
 
-    if "robustness_score" in metrics:
-        metrics_summary["robustness_score"] = robustness_score(base_accuracy, results["accuracy"])
+    # if "robustness_score" in metrics:
+    #     metrics_summary["robustness_score"] = robustness_score(base_accuracy, results["accuracy"])
         
 
-    if "effective_robustness" in metrics:
-        metrics_summary["effective_robustness"] = effective_robustness(base_accuracy, results["accuracy"])
+    # if "effective_robustness" in metrics:
+    #     metrics_summary["effective_robustness"] = effective_robustness(base_accuracy, results["accuracy"])
 
-    if "our_metric" in metrics:
-        metrics_summary["our_metric"] = our_metric(base_accuracy, results["accuracy"])
+    # if "our_metric" in metrics:
+    #     metrics_summary["our_metric"] = our_metric(base_accuracy, results["accuracy"])
 
-    if "base_accuracy" in metrics:
-        metrics_summary["accuracy"] = base_accuracy
+    # if "base_accuracy" in metrics:
+    #     metrics_summary["accuracy"] = base_accuracy
+    metrics_summary = None
 
     return results, metrics_summary
-
-
-
 
 
 
