@@ -7,6 +7,7 @@ from perturbation import apply_perturbation
 from vectorizer import vectorize_data
 from metrics import (
     mean_corruption_error,
+    performance_drop_rate,
     relative_corruption_error,
     robustness_score,
     effective_robustness,
@@ -23,7 +24,17 @@ def evaluate_robustness(
         file_path: Optional[Path] = None,
     ):
 
-    results = {"perturbation level": [], "accuracy": []}
+    results = {"perturbation level": [], 
+               "accuracy": [], 
+               "RS": [],
+               "mCE": [],
+               "PDR": [],
+               "MDS": []
+               }
+
+    
+    # Accuracy data used for calculating metrics
+    accuracy_data = []
 
     for level in perturbation_levels:
         # Handle the case where file_path is None
@@ -46,22 +57,39 @@ def evaluate_robustness(
         # Predict and calculate accuracy
         y_pred = model.predict(X_perturbed_vect)
         accuracy = accuracy_score(y, y_pred)
+        
 
         # Store results
         results["perturbation level"].append(level)
         results["accuracy"].append(accuracy)
 
+        # Store accuracy of each perturbation 
+        accuracy_data.append(accuracy)
+
+        
     base_accuracy = results["accuracy"][0]
     metrics_summary = {}
 
+
+    # Add metric data to results
+    for i in range(len(accuracy_data)):
+        results["RS"].append(robustness_score(base_accuracy, accuracy_data[i]) if "robustness_score" in metrics else None)
+        results["mCE"].append(mean_corruption_error(base_accuracy, accuracy_data[i]) if "mce" in metrics else None)        
+        results["PDR"].append(performance_drop_rate(base_accuracy, accuracy_data[i]) if "pdr" in metrics else None)
+        results["MDS"].append(our_metric(base_accuracy, accuracy_data[i]) if "our_metric" in metrics else None)                  
+    
+
+    # Summaries (incorporate above?)
     if "mce" in metrics:
         metrics_summary["mce"] = mean_corruption_error(base_accuracy, results["accuracy"])
+        
         
     if "rce" in metrics:
         metrics_summary["rce"] = relative_corruption_error(base_accuracy, results["accuracy"])
 
     if "robustness_score" in metrics:
         metrics_summary["robustness_score"] = robustness_score(base_accuracy, results["accuracy"])
+        
 
     if "effective_robustness" in metrics:
         metrics_summary["effective_robustness"] = effective_robustness(base_accuracy, results["accuracy"])
