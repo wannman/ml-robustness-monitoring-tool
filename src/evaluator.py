@@ -44,7 +44,7 @@ def evaluate_robustness(
         else:
             load_path = None
 
-        # Apply perturbation
+        # Apply perturbation #FUNKAR FÖR 0?
         X_perturbed_data = apply_perturbation(X, level, load_path=load_path)
 
         # print(f"\nPerturbation level: {level}")
@@ -65,10 +65,18 @@ def evaluate_robustness(
         results["accuracy"].append(accuracy)
 
         # Store accuracy of each perturbation 
-        accuracy_data.append(accuracy)
+        
+        if level == 0.0:
+            base_accuracy = accuracy
+            results["RS"].append(None)
+            results["mCE"].append(None)
+            results["PDR"].append(None)
+            results["MDS"].append(None)
+        else:
+            accuracy_data.append(accuracy)
 
         
-    base_accuracy = results["accuracy"][0]
+    #base_accuracy = results["accuracy"][0]
     metrics_summary = {}
 
 
