@@ -21,9 +21,9 @@ def apply_perturbation(
     pct_words_to_swap = 1.0
     random.seed(42)
     
-    #augmenter = WordNetAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
+    augmenter = WordNetAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
     #augmenter = CharSwapAugmenter(pct_words_to_swap=pct_words_to_swap, transformations_per_example=1)
-    augmenter = DeletionAugmenter(pct_words_to_swap=0.7, transformations_per_example=1)
+    #augmenter = DeletionAugmenter(pct_words_to_swap=0.7, transformations_per_example=1)
 
     num_lines = len(X)
     num_to_augment = int(num_lines * level)
