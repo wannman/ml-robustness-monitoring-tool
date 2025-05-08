@@ -11,7 +11,9 @@ from metrics import (
     relative_corruption_error,
     robustness_score,
     effective_robustness,
-    our_metric
+    our_metric,
+    simple_mds,
+    max_mds
 ) 
 
 def evaluate_robustness(
@@ -29,7 +31,9 @@ def evaluate_robustness(
                "RS": [],
                "mCE": [],
                "PDR": [],
-               "MDS": []
+               "MDS": [],
+               "SimpleMDS": [],
+               "MaxMDS": []
                }
 
     
@@ -72,6 +76,8 @@ def evaluate_robustness(
             results["mCE"].append(None)
             results["PDR"].append(None)
             results["MDS"].append(None)
+            results["SimpleMDS"].append(None)
+            results["MaxMDS"].append(None)
         else:
             accuracy_data.append(accuracy)
 
@@ -86,14 +92,20 @@ def evaluate_robustness(
     # For MDS, we send all accuracy data and get a list of results at all possible perturbation levels
     # which we append to results
     mds_scores = []
+    smds_scores = []
+    max_mds_scores = []
     mds_scores = our_metric(base_accuracy, accuracy_data)
+    smds_scores = simple_mds(base_accuracy, accuracy_data)
+    max_mds_scores = max_mds(base_accuracy, accuracy_data)
     for i in range(len(accuracy_data)):
         results["RS"].append(robustness_score(base_accuracy, accuracy_data[i]) if "robustness_score" in metrics else None)
         results["mCE"].append(mean_corruption_error(base_accuracy, accuracy_data[i]) if "mce" in metrics else None)        
         results["PDR"].append(performance_drop_rate(base_accuracy, accuracy_data[i]) if "pdr" in metrics else None)
         # results["MDS"].append(our_metric(base_accuracy, accuracy_data[i]) if "our_metric" in metrics else None) 
         # Add MDS from calculated list instead
-        results["MDS"].append(mds_scores[i] if "our_metric" in metrics else None)                
+        results["MDS"].append(mds_scores[i] if "our_metric" in metrics else None)
+        results["SimpleMDS"].append(smds_scores[i] if "simple_mds" in metrics else None)
+        results["MaxMDS"].append(max_mds_scores[i] if "max_mds" in metrics else None)                
     
 
 

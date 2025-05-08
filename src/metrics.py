@@ -23,7 +23,42 @@ def performance_drop_rate(base_accuracy: float, perturbed_accuracies: list) -> f
     return (base_accuracy-perturbed_accuracies)/base_accuracy
 
 
-# returns all scores at ones, where applicable
+def simple_mds(base_accuracy: float, perturbed_accuracies: list) -> list:
+    smds_list = []
+
+    for i in range(len(perturbed_accuracies)): 
+        #  Undefined at first perturbed value
+        if i == 0:
+            smds_list.append(None)
+            continue
+
+        # acc(n)-acc(n-1) (not same as original MDS)
+        current_diff = perturbed_accuracies[i]-perturbed_accuracies[i-1]
+
+        # acc(n-1)-acc(baseline)
+        prev_to_baseline_diff = perturbed_accuracies[i-1]-base_accuracy
+
+        smds_list.append(current_diff/prev_to_baseline_diff)
+        
+    return smds_list
+
+def max_mds(base_accuracy: float, perturbed_accuracies: list) -> list:
+    max_mds_list = []
+
+    for i in range(len(perturbed_accuracies)): 
+        #  Undefined at first perturbed value
+        if i == 0:
+            max_mds_list.append(None)
+            continue
+
+        # acc(n-1)-acc(n) (same as MDS, not same as SMDS)
+        current_diff = perturbed_accuracies[i-1]-perturbed_accuracies[i]
+
+        max_mds_list.append(max(0, (current_diff/base_accuracy)))
+        
+    return max_mds_list
+
+# returns all scores at once, where applicable
 def our_metric(base_accuracy: float, perturbed_accuracies: list) -> list:
     mds_list = []
     diff_list = []
