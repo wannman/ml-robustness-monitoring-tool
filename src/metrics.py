@@ -84,6 +84,29 @@ def our_metric(base_accuracy: float, perturbed_accuracies: list) -> list:
             diff_list.append(current_diff)
         
     return mds_list
+
+def new_mds(base_accuracy: float, perturbed_accuracies: list, epsilon: float = 0.05) -> list:
+    
+    mds_values = []
+
+    for i in range(len(perturbed_accuracies)):
+        if i == 0:
+            mds_values.append(None)
+            continue
+
+        current = perturbed_accuracies[i]
+        prev = perturbed_accuracies[i - 1]
+
+        if current < prev:
+            prev_avg = sum(perturbed_accuracies[:i]) / i
+            denom = max(base_accuracy - prev_avg, epsilon)
+            mds_score  = (prev - current) / denom
+        else:
+            mds_score = 0.0
+
+        mds_values.append(mds_score)
+
+    return mds_values
         
  
 

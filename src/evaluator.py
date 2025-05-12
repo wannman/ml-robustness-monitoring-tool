@@ -13,7 +13,8 @@ from metrics import (
     effective_robustness,
     our_metric,
     simple_mds,
-    max_mds
+    max_mds,
+    new_mds
 ) 
 
 def evaluate_robustness(
@@ -33,7 +34,8 @@ def evaluate_robustness(
                "PDR": [],
                "MDS": [],
                "SimpleMDS": [],
-               "MaxMDS": []
+               "MaxMDS": [],
+               "NewMDS": []
                }
 
     
@@ -78,6 +80,7 @@ def evaluate_robustness(
             results["MDS"].append(None)
             results["SimpleMDS"].append(None)
             results["MaxMDS"].append(None)
+            results["NewMDS"].append(None)
         else:
             accuracy_data.append(accuracy)
 
@@ -97,6 +100,7 @@ def evaluate_robustness(
     mds_scores = our_metric(base_accuracy, accuracy_data)
     smds_scores = simple_mds(base_accuracy, accuracy_data)
     max_mds_scores = max_mds(base_accuracy, accuracy_data)
+    new_mds_scores = new_mds(base_accuracy, accuracy_data)
     for i in range(len(accuracy_data)):
         results["RS"].append(robustness_score(base_accuracy, accuracy_data[i]) if "robustness_score" in metrics else None)
         results["mCE"].append(mean_corruption_error(base_accuracy, accuracy_data[i]) if "mce" in metrics else None)        
@@ -105,7 +109,8 @@ def evaluate_robustness(
         # Add MDS from calculated list instead
         results["MDS"].append(mds_scores[i] if "our_metric" in metrics else None)
         results["SimpleMDS"].append(smds_scores[i] if "simple_mds" in metrics else None)
-        results["MaxMDS"].append(max_mds_scores[i] if "max_mds" in metrics else None)                
+        results["MaxMDS"].append(max_mds_scores[i] if "max_mds" in metrics else None)
+        results["NewMDS"].append(new_mds_scores[i] if "new_mds" in metrics else None)                
     
 
 
