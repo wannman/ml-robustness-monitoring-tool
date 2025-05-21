@@ -8,135 +8,82 @@ from vectorizer import vectorize_data
 from metrics import (
     mean_corruption_error,
     performance_drop_rate,
-    relative_corruption_error,
     robustness_score,
-    effective_robustness,
-    our_metric,
-    simple_mds,
-    max_mds,
-    new_mds
-) 
+    mean_divergence_score
+)
 
 def evaluate_robustness(
-        model: BaseEstimator,
-        vectorizer: BaseEstimator,
-        X: list[np.ndarray],
-        y: np.ndarray,
-        perturbation_levels: list[float],
-        metrics: list[str],
-        file_path: Optional[Path] = None,
-    ):
+    model: BaseEstimator,
+    vectorizer: BaseEstimator,
+    X: list[np.ndarray],
+    y: np.ndarray,
+    perturbation_levels: list[float],
+    metrics: list[str],
+    file_path: Optional[Path] = None,
+    augmentation_type: str = "wordnet"
+) -> dict:
 
-    results = {"perturbation level": [], 
-               "accuracy": [], 
-               "RS": [],
-               "mCE": [],
-               "PDR": [],
-               "MDS": [],
-               "SimpleMDS": [],
-               "MaxMDS": [],
-               "NewMDS": []
-               }
+    decimals = 3
 
-    
-    # Accuracy data used for calculating metrics
-    accuracy_data = []
-    
+    # Init results
+    results = {
+        "perturbation level": [],
+        "accuracy": [],
+        "RS": [],
+        "mCE": [],
+        "PDR": [],
+        "MDS": [],
+    }
 
+    base_accuracy = None
+    accuracy_at_levels = []
+
+    # Perturbation and Evaluation Loop
     for level in perturbation_levels:
-        # Handle the case where file_path is None
-        if file_path:
-            load_path = file_path / f"perturbed_data_{level:.2f}.pkl"
-        else:
-            load_path = None
+        load_path = file_path / f"perturbed_data_{level:.2f}.pkl" if file_path else None
 
-        # Apply perturbation #FUNKAR FÖR 0?
-        X_perturbed_data = apply_perturbation(X, level, load_path=load_path)
+        X_perturbed = apply_perturbation(
+            X,
+            level=level,
+            augmentation_type=augmentation_type,
+            load_path=load_path
+        )
 
-        # print(f"\nPerturbation level: {level}")
-        # for original, changed in zip(X, X_perturbed_data):
-        #     print(f"ORIGINAL: {original}")
-        #     print(f"PERTURBED: {changed}")
-
-        # Vectorize the perturbed data
-        X_perturbed_vect = vectorize_data(vectorizer, X_perturbed_data)
-
-        # Predict and calculate accuracy
+        X_perturbed_vect = vectorize_data(vectorizer, X_perturbed)
         y_pred = model.predict(X_perturbed_vect)
-        accuracy = accuracy_score(y, y_pred)
-        
+        acc = accuracy_score(y, y_pred)
 
-        # Store results
         results["perturbation level"].append(level)
-        results["accuracy"].append(accuracy)
+        results["accuracy"].append(round(acc, decimals))
 
-        # Store accuracy of each perturbation 
-        
         if level == 0.0:
-            base_accuracy = accuracy
-            results["RS"].append(None)
-            results["mCE"].append(None)
-            results["PDR"].append(None)
-            results["MDS"].append(None)
-            results["SimpleMDS"].append(None)
-            results["MaxMDS"].append(None)
-            results["NewMDS"].append(None)
+            base_accuracy = acc
+            for key in ("RS", "mCE", "PDR", "MDS"):
+                results[key].append(None)
         else:
-            accuracy_data.append(accuracy)
+            accuracy_at_levels.append(acc)
 
-        
-    #base_accuracy = results["accuracy"][0]
-    metrics_summary = {}
+    if base_accuracy is None:
+        raise ValueError("Baselevel accuracy (level=0.0) was not found. Ensure 0.0 is in perturbation_levels.")
 
+    mce_values = mean_corruption_error(accuracy_at_levels) if "mce" in metrics else []
+    mds_values = mean_divergence_score(base_accuracy, accuracy_at_levels) if "mds" in metrics else []
 
+    for i, acc in enumerate(accuracy_at_levels):
+    # RS (Robustness Score)
+        rs = robustness_score(base_accuracy, acc) if "rs" in metrics else None
+        results["RS"].append(round(rs, decimals) if rs is not None else None)
 
-    
-    # Add metric data to results
-    # For MDS, we send all accuracy data and get a list of results at all possible perturbation levels
-    # which we append to results
-    mds_scores = []
-    smds_scores = []
-    max_mds_scores = []
-    mds_scores = our_metric(base_accuracy, accuracy_data)
-    smds_scores = simple_mds(base_accuracy, accuracy_data)
-    max_mds_scores = max_mds(base_accuracy, accuracy_data)
-    new_mds_scores = new_mds(base_accuracy, accuracy_data)
-    for i in range(len(accuracy_data)):
-        results["RS"].append(robustness_score(base_accuracy, accuracy_data[i]) if "robustness_score" in metrics else None)
-        results["mCE"].append(mean_corruption_error(base_accuracy, accuracy_data[i]) if "mce" in metrics else None)        
-        results["PDR"].append(performance_drop_rate(base_accuracy, accuracy_data[i]) if "pdr" in metrics else None)
-        # results["MDS"].append(our_metric(base_accuracy, accuracy_data[i]) if "our_metric" in metrics else None) 
-        # Add MDS from calculated list instead
-        results["MDS"].append(mds_scores[i] if "our_metric" in metrics else None)
-        results["SimpleMDS"].append(smds_scores[i] if "simple_mds" in metrics else None)
-        results["MaxMDS"].append(max_mds_scores[i] if "max_mds" in metrics else None)
-        results["NewMDS"].append(new_mds_scores[i] if "new_mds" in metrics else None)                
-    
+        # mCE (Mean Corruption Error)
+        mce = mce_values[i] if "mce" in metrics else None
+        results["mCE"].append(round(mce, decimals) if mce is not None else None)
 
+        # PDR (Performance Drop Rate)
+        pdr = performance_drop_rate(base_accuracy, acc) if "pdr" in metrics else None
+        results["PDR"].append(round(pdr, decimals) if pdr is not None else None)
 
-    # Summaries (incorporate above?)
-    # if "mce" in metrics:
-    #     metrics_summary["mce"] = mean_corruption_error(base_accuracy, results["accuracy"])
-        
-        
-    # if "rce" in metrics:
-    #     metrics_summary["rce"] = relative_corruption_error(base_accuracy, results["accuracy"])
+        # MDS (Mean Divergence Score — precomputed)
+        mds = mds_values[i] if "mds" in metrics else None
+        results["MDS"].append(round(mds, decimals) if mds is not None else None)
 
-    # if "robustness_score" in metrics:
-    #     metrics_summary["robustness_score"] = robustness_score(base_accuracy, results["accuracy"])
-        
-
-    # if "effective_robustness" in metrics:
-    #     metrics_summary["effective_robustness"] = effective_robustness(base_accuracy, results["accuracy"])
-
-    # if "our_metric" in metrics:
-    #     metrics_summary["our_metric"] = our_metric(base_accuracy, results["accuracy"])
-
-    # if "base_accuracy" in metrics:
-    #     metrics_summary["accuracy"] = base_accuracy
-    metrics_summary = None
-
-    return results, metrics_summary
-
-
-
+    return results
